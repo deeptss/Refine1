@@ -1,0 +1,72 @@
+AKZO
+##Remove spaces in Company
+refine1$company <- gsub(" ", "", refine1$company)
+##Convert everything to AKZO irrespective of case and o as 0
+refine1$company <- gsub("akz(o|0)", "AKZO", refine1$company, ignore.case = TRUE)
+
+Philippes
+refine1$company <- gsub("^((f|ph).+)ps$", "Phillips", refine1$company, ignore.case = TRUE)
+
+VanHeusen
+refine1$company <- gsub("^(va.+)en$", "VanHouten", refine1$company, ignore.case = TRUE)
+
+Unilever
+ refine1$company <- gsub("^(un.+)er$", "Unilever", refine1$company, ignore.case = TRUE)
+
+### Separating second column into two different columns 
+
+refine1 <- refine1 %>% separate(Product.code...number, c("Product", "Number"), sep = "-")
+
+### Replacing values in Product column 
+
+refine1$Product <- gsub("p", "radio", refine1$Product, ignore.case = TRUE)
+refine1$Product <- gsub("x", "computer", refine1$Product, ignore.case = TRUE)
+refine1$Product <- gsub("v", "tv", refine1$Product, ignore.case = TRUE)
+refine1$Product <- gsub("q", "tablet", refine1$Product, ignore.case = TRUE)
+
+### Replace values in name column by "M" and "F"
+
+refine1$name <- gsub("dhr", "M", refine1$name, ignore.case = TRUE)
+refine1$name <- gsub("mevr", "F", refine1$name, ignore.case = TRUE)
+
+> refine1$name <- gsub("p. ", "p.", refine1$name, ignore.case = TRUE)
+> refine1$name <- gsub("j. ", "j.", refine1$name, ignore.case = TRUE)
+> refine1$name <- gsub("l. ", "l.", refine1$name, ignore.case = TRUE)
+> refine1$name <- gsub("I. ", "I.", refine1$name, ignore.case = TRUE)
+> refine1$name <- gsub("L. ", "L.", refine1$name, ignore.case = TRUE)
+> refine1$name <- gsub("L.", "l.", refine1$name, ignore.case = TRUE)
+
+refine1 <- refine1 %>% separate(name, c("gender", "names"), sep = " ")
+refine1 <- refine1 %>% separate(name, c("Initial", "names"), sep = ". ")
+
+### Appending address and city columns as geocode
+
+refine1 <- refine1 %>% unite(geocode, address, city , sep = ",")
+
+### Append geocode and country columns as geocode2
+
+
+refine1 <- refine1 %>% unite(geocode2, geocode, country, sep = ",")
+
+
+##### At any point if you want to delete a column
+
+refine1#country <- NULL
+
+
+	
+### Adding latitude and longitude by using geocode column
+
+refine1_geo <- geocode(refine1$geocode2, output = "latlon", source = "google")
+
+### Combine it to the actual refine table by adding latitude and longitude columns 
+
+refine1 <- bind_cols(refine1, refine1_geo)
+
+### Combine them into a single column called lat_long
+
+ refine1 <- refine1 %>% unite(lat_long, lat, lon, sep = "," )
+
+### Download file using write.csv function
+
+write.csv(x = refine1, file = "refine1.csv")
